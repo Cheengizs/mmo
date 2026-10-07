@@ -1,0 +1,35 @@
+Raw shape: (6607, 20)
+Nulls before:
+Teacher_Quality             78
+Parental_Education_Level    90
+Distance_from_Home          67
+dtype: int64
+
+Imputed modes: {'Teacher_Quality': 'Medium', 'Parental_Education_Level': 'High School', 'Distance_from_Home': 'Near'}
+Outlier bounds: {'Hours_Studied': (np.float64(4.0), np.float64(36.0), np.float64(16.0), np.float64(24.0), np.float64(8.0)), 'Exam_Score': (np.float64(59.0), np.float64(75.0), np.float64(65.0), np.float64(69.0), np.float64(4.0))}
+Shape after outliers: (6473, 20)
+Shape after encoding: (6473, 25)
+
+MinMax summary:
+     Hours_Studied  Attendance  ...  Attendance_Weighted_Score  Study_to_Sleep_Ratio
+min            0.0         0.0  ...                        0.0                   0.0
+max            1.0         1.0  ...                        1.0                   1.0
+
+[2 rows x 9 columns]
+
+StandardScaler summary:
+      Hours_Studied  ...  Study_to_Sleep_Ratio
+mean            0.0  ...                  -0.0
+std             1.0  ...                   1.0
+
+[2 rows x 9 columns]
+
+Correlation with Exam_Score:
+Hours_Studied                0.49
+Attendance                   0.68
+Previous_Scores              0.20
+Total_Study_Effort           0.53
+Attendance_Weighted_Score    0.57
+Study_to_Sleep_Ratio         0.39
+Exam_Score                   1.00
+Name: Exam_Score, dtype: float64

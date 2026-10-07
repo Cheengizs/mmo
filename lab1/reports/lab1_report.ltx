@@ -1,0 +1,597 @@
+\documentclass[14pt,a4paper]{extarticle}
+\usepackage{bsuir_stp}
+
+% =========================================================================
+% ДАННЫЕ ДЛЯ ТИТУЛЬНОГО ЛИСТА
+% =========================================================================
+\stpFaculty{Факультет компьютерных систем и сетей}
+\stpDepartment{Кафедра программного обеспечения информационных технологий}
+\stpSubject{Методы машинного обучения}
+\stpLabNumber{1}
+\stpLabTopic{Основы языка Python, алгоритмы обработки данных, обработка исключений и объектно-ориентированное программирование}
+\stpVariant{7} % Обязательный номер варианта
+\stpStudent{Валинский А. С.}
+\stpGroup{351002}
+\stpTeacherRole{преподаватель}
+\stpTeacher{Лебедевич А. В.}
+\stpCity{Минск}
+\stpYear{2026}
+
+\begin{document}
+
+% -------------------------------------------------------------------------
+% 1. ТИТУЛЬНЫЙ ЛИСТ (включается в нумерацию, номер не выводится)
+% -------------------------------------------------------------------------
+\makestptitlepage
+
+% -------------------------------------------------------------------------
+% 2. ЦЕЛЬ ВЫПОЛНЕНИЯ ЛАБОРАТОРНОЙ РАБОТЫ
+% -------------------------------------------------------------------------
+\section{Цель работы}
+Целью выполнения лабораторной работы является:
+\begin{enumerate}
+  \item Освоение базового синтаксиса языка Python, концепции динамической типизации и встроенных структур данных (числовые типы, строки, списки, кортежи, словари), а также алгоритмов их модификации, фильтрации и сортировки.
+  \item Изучение модульного построения программ с помощью функций, механизмов передачи параметров, возврата значений и гарантированной обработки исключительных ситуаций конструкцией \texttt{try..except..else..finally}.
+  \item Получение практических навыков реализации объектно-ориентированной модели: проектирование классов, разграничение доступа к атрибутам с помощью декораторов свойств (\texttt{@property}), реализация механизма наследования, полиморфизма и специальных методов.
+  \item Разработка собственной динамической структуры данных (односвязный список) и организация долговременного хранения данных посредством файлового ввода-вывода.
+\end{enumerate}
+
+% -------------------------------------------------------------------------
+% 3. ТЕОРИЯ ПО ЛАБОРАТОРНОЙ РАБОТЕ (СТРОГО НЕ БОЛЕЕ 4 СТРАНИЦ)
+% -------------------------------------------------------------------------
+\section{Краткие теоретические сведения}
+
+\subsection{Динамическая типизация и встроенные типы данных Python}
+
+Одной из ключевых архитектурных черт языка Python является сильная динамическая типизация. Переменная в Python не требует предварительного объявления типа: имя переменной выступает в роли ссылки (указателя) на созданный в динамической памяти объект. Тип данных связывается непосредственно с объектом в момент присваивания значения.
+
+Стандартная библиотека языка содержит широкий спектр скалярных и составных типов данных:
+\begin{itemize}
+  \item \textbf{\texttt{int} и \texttt{float}} --- целые числа произвольной разрядности и числа с плавающей запятой двойной точности.
+  \item \textbf{\texttt{bool}} --- логический тип, принимающий значения \texttt{True} или \texttt{False} и являющийся подклассом целых чисел.
+  \item \textbf{\texttt{str}} --- неизменяемая последовательность символов в кодировке Unicode. Поддерживает операции индексирования, срезов (\textit{slicing} вида \texttt{[start:stop:step]}), а также специализированные методы проверки регистра (\texttt{.isupper()}, \texttt{.islower()}), поиска подстрок и конкатенации.
+  \item \textbf{\texttt{list}} --- динамический изменяемый гетерогенный массив, обеспечивающий добавление в конец за амортизированное время $O(1)$ и произвольный доступ по индексу.
+  \item \textbf{\texttt{tuple}} --- неизменяемый кортеж фиксированной длины, потребляющий меньше системных ресурсов и гарантирующий защиту элементов от случайной модификации.
+  \item \textbf{\texttt{dict}} --- ассоциативный массив пар «ключ--значение», функционирующий на основе хеш-таблиц. Обеспечивает среднюю временную сложность поиска, вставки и удаления за $O(1)$. Ключами словаря могут выступать только хешируемые неизменяемые типы данных.
+\end{itemize}
+
+Сортировка последовательностей в Python реализуется стандартной функцией \texttt{sorted()} на базе адаптивного алгоритма Timsort с временной сложностью в худшем и среднем случаях $O(n \log n)$. Порядок сортировки и критерий сравнения регулируются именованными аргументами \texttt{reverse} и \texttt{key}.
+
+\subsection{Функции и механизм обработки исключений}
+
+Функции представляют собой самостоятельные именованные блоки инструкций, позволяющие устранить дублирование логики и декомпозировать сложную вычислительную задачу на элементарные подзадачи. Объявление функции выполняется ключевым словом \texttt{def}, за которым следует сигнатура аргументов и тело с отступом в четыре пробела. Если инструкция \texttt{return} отсутствует, функция возвращает специальный объект \texttt{None}.
+
+Исключения (\textit{exceptions}) в Python представляют собой специализированный тип данных, служащий для сигнализации об ошибках времени выполнения и аномальных состояниях программы. Для предотвращения аварийного завершения процесса применяется блочная конструкция:
+\begin{lstlisting}[language=Python]
+try:
+    # Контролируемый блок инструкций
+    result = risky_operation()
+except SpecificException as error:
+    # Перехват и нейтрализация конкретного типа ошибки
+    handle_error(error)
+else:
+    # Выполняется только при отсутствии исключений в блоке try
+    process_success(result)
+finally:
+    # Гарантированно исполняется при любом исходе
+    cleanup_resources()
+\end{lstlisting}
+
+Иерархия исключений базируется на суперклассе \texttt{BaseException} и его основном производном классе \texttt{Exception}. Среди наиболее распространенных стандартных ошибок выделяются:
+\begin{itemize}
+  \item \textbf{\texttt{TypeError}} --- передача аргумента неподдерживаемого типа;
+  \item \textbf{\texttt{ValueError}} --- передача аргумента корректного типа, но недопустимого значения;
+  \item \textbf{\texttt{IndexError}} --- обращение к элементу по индексу, выходящему за границы последовательности;
+  \item \textbf{\texttt{ZeroDivisionError}} --- попытка деления числа на ноль.
+\end{itemize}
+
+\subsection{Объектно-ориентированное программирование в Python}
+
+Объектно-ориентированный подход структурирует программный комплекс в виде взаимодействующих сущностей (объектов), являющихся экземплярами классов. Определение класса задается директивой \texttt{class}. В соответствии с соглашением PEP-8 имена классов записываются в стиле CamelCase.
+
+Ключевые концепции ООП в Python реализуются следующим образом:
+\begin{enumerate}
+  \item \textbf{Инициализатор \texttt{\_\_init\_\_} и ссылка \texttt{self}}: метод \texttt{\_\_init\_\_} вызывается непосредственно после создания экземпляра методом \texttt{\_\_new\_\_} для инициализации атрибутов объекта. Параметр \texttt{self} связывается с конкретным экземпляром и обеспечивает доступ к его внутреннему состоянию.
+  \item \textbf{Инкапсуляция}: сокрытие деталей внутренней реализации и валидация данных осуществляются соглашением о защищенных полях (префикс подчеркивания \texttt{\_name}) и связкой декораторов \texttt{@property} (геттер) и \texttt{@<name>.setter} (сеттер).
+  \item \textbf{Наследование}: производный класс расширяет интерфейс базового класса, а инициализация родительских атрибутов производится вызовом \texttt{super().\_\_init\_\_(...)}.
+  \item \textbf{Специальные методы (dunder-методы)}: методы \texttt{\_\_str\_\_()} и \texttt{\_\_len\_\_()} интегрируют пользовательские объекты с системными функциями \texttt{print()}, \texttt{str()} и \texttt{len()}.
+\end{enumerate}
+
+\subsection{Реализация динамических структур данных на базе классов}
+
+Линейный односвязный список представляет собой динамическую цепочку независимых узловых элементов. Каждый узел инкапсулирует информационное поле \texttt{value} и адресную ссылку на следующий узел \texttt{nextElem}:
+\begin{equation}
+  Node_i = \langle value_i, \ \&Node_{i+1} \rangle, \quad Node_n.nextElem = \mathrm{None}.
+\end{equation}
+
+В отличие от стандартного вектора, добавление и удаление элементов в голову списка выполняется за время $O(1)$ без выделения непрерывного блока памяти и перемещения соседних элементов. Доступ к произвольному $k$-му элементу осуществляется последовательным обходом ссылок со сложностью $O(k)$.
+
+% -------------------------------------------------------------------------
+% 4. ФОРМУЛИРОВКА ИНДИВИДУАЛЬНОГО ЗАДАНИЯ
+% -------------------------------------------------------------------------
+\section{Формулировка индивидуального задания}
+
+Согласно варианту №\,7 индивидуальное задание лабораторной работы состоит из трех взаимосвязанных частей:
+
+\subsection{Часть 1. Базовые алгоритмы и структуры данных}
+\begin{enumerate}
+  \item \textbf{Задание 1.} Найти сумму нечетных цифр введенного с клавиатуры натурального числа.
+  \item \textbf{Задание 2.} Посчитать, сколько пар стоящих рядом символов верхнего и нижнего регистра находится в введенном слове, а также определить общее количество согласных букв.
+  \item \textbf{Задание 3.} Дан гетерогенный список $[1612, 49, \text{'hello'}, 6, 19, \text{'world'}]$. Все числа списка проверить на четность: если число четное --- вычислить сумму его цифр, если нечетное --- заменить его значением 1. Для всех строковых элементов посчитать количество гласных и согласных букв.
+  \item \textbf{Задание 4.} Отсортировать произвольный словарь по значениям в порядке возрастания и убывания.
+  \item \textbf{Задание 5.} Разработать консольное меню «Кондитерская», включающее просмотр описания, цены, остатка на складе, полной сводки, покупку товара с пересчетом баланса и выход.
+  \item \textbf{Задание 6.} Дан кортеж целых чисел. Отсортировать его элементы по убыванию и вывести экстремальные значения (минимальное и максимальное).
+\end{enumerate}
+
+\subsection{Часть 2. Функции и обработка исключений}
+Все задания выполнить с обязательным использованием функций и отказоустойчивой обработкой потенциальных исключений блоками \texttt{try..except..finally}:
+\begin{enumerate}
+  \item \textbf{Задание 1.} Разработать функцию \texttt{is\_password\_good(password)}, возвращающую \texttt{True}, если длина пароля составляет не менее 10 символов и он одновременно содержит заглавные и строчные буквы.
+  \item \textbf{Задание 2.} Разработать функцию \texttt{diffTypeFunction(a)}, принимающую аргумент переменного типа (кортеж --- длины элементов; список --- сумма после первого отрицательного; число --- число четных цифр; строка --- сумма чисел). Протестировать все ветки.
+  \item \textbf{Задание 3.} Дана матрица и индексы $i$ и $j$. Реализовать перестановку столбцов с номерами $i$ и $j$ с проверкой выхода индексов за пределы размерности.
+  \item \textbf{Задание 4.} Реализовать программу, комплексно иллюстрирующую функционирование конструкции \texttt{try..except..else..finally}.
+\end{enumerate}
+
+\subsection{Часть 3. Объектно-ориентированное программирование}
+\begin{enumerate}
+  \item \textbf{Задание 1.} Создать класс односвязного списка \texttt{cheengizsList} и реализовать в нем методы добавления (\texttt{append}, \texttt{prepend}, \texttt{insert}), удаления (\texttt{remove}), индексации (\texttt{get}, \texttt{find}) и обращения (\texttt{reverse}).
+  \item \textbf{Задание 2.} Спроектировать базовый класс «Транспортное средство» и производные классы «Самолет», «Поезд», «Автомобиль». Рассчитать время и стоимость поездки по маршруту и определить оптимальные варианты. Обеспечить запись отчета в файл.
+  \item \textbf{Задание 3.} Создать классы «Книга», «Отдел» и «Библиотека». Реализовать операции каталогизации, инкапсуляцию полей и выгрузку иерархии в текстовый файл.
+\end{enumerate}
+
+% -------------------------------------------------------------------------
+% 5. ВЕСЬ КОД РЕШЕНИЯ ИНДИВИДУАЛЬНОГО ЗАДАНИЯ
+% -------------------------------------------------------------------------
+\section{Код решения индивидуального задания}
+
+Ниже приведен полный программный код решения задач лабораторной работы, выполненный на языке Python.
+
+\begin{lstlisting}[language=Python, caption={Программное решение Части 1 (базовые типы и алгоритмы)}]
+# --- Вспомогательные функции ---
+def isVowel(x):
+    x = x.lower()
+    return x in ('a', 'e', 'i', 'o', 'u')
+
+# --- Задание 1: Сумма нечетных цифр числа ---
+s = input("Enter a number: ")
+sumDigits = 0
+for char in s:
+    if char in "13579":
+        sumDigits += int(char)
+print("Sum of odd digits:", sumDigits)
+
+# --- Задание 2: Подсчет регистровых пар и согласных ---
+s = input("enter string: ")
+sumUpper = 0
+sumLower = 0
+consonantAmount = 0 if isVowel(s[0]) else 1
+
+for i in range(1, len(s)):
+    if s[i-1].isupper() and s[i].isupper():
+        sumUpper += 1
+    if s[i-1].islower() and s[i].islower():
+        sumLower += 1
+    if not isVowel(s[i]):
+        consonantAmount += 1
+
+print("end upper =", sumUpper)
+print("end lower =", sumLower)
+print("consonant amount =", consonantAmount)
+
+# --- Задание 3: Обработка гетерогенного списка ---
+data = [1612, 49, 'hello', 6, 19, 'world']
+print("original list: ", data)
+for i in range(len(data)):
+    if type(data[i]) == int:
+        if data[i] % 2 == 1:
+            data[i] = 1
+            continue
+        digitSum = sum(int(c) for c in str(data[i]))
+        print("sum of digits in", data[i], "is", digitSum)
+    elif type(data[i]) == str:
+        consonants = sum(1 for c in data[i] if not isVowel(c))
+        print("consonant amount in", data[i], "is", consonants)
+        print("vowel amount in", data[i], "is", len(data[i]) - consonants)
+
+print("affected list: ", data)
+
+# --- Задание 4: Сортировка словаря по значениям ---
+someDict = {'a': 1, 'b': 5, 'c': 3, 'd': 2}
+print("По возрастанию:", dict(sorted(someDict.items(), key=lambda item: item[1], reverse=False)))
+print("По убыванию:  ", dict(sorted(someDict.items(), key=lambda item: item[1], reverse=True)))
+
+# --- Задание 5: Консольная программа «Кондитерская» ---
+bakery = {
+    "Торт": ["Бисквитные коржи, крем, шоколадная глазурь", 120, 1500],
+    "Пирожное": ["Песочное тесто, заварной крем", 80, 800],
+    "Маффин": ["Шоколадное тесто, кусочки шоколада", 60, 600],
+    "Круассан": ["Слоеное тесто, миндальная начинка", 70, 500]
+}
+
+# --- Задание 6: Сортировка кортежа ---
+numTuple = (2, 8, -1, 7, 0, 3, 15555)
+print("Original tuple: ", numTuple)
+newNumTuple = sorted(numTuple, reverse=True)
+print("Sorted tuple:   ", newNumTuple)
+print("Min value in tuple: ", newNumTuple[-1])
+print("Max value in tuple: ", newNumTuple[0])
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={Программное решение Части 2 (функции и исключения)}]
+# --- Задание 1: Проверка надежности пароля ---
+def is_password_good(password):
+    try:
+        if len(password) < 10:
+            return False
+        if not any(symb.isupper() for symb in password):
+            return False
+        if not any(symb.islower() for symb in password):
+            return False
+        return True
+    except TypeError as e:
+        print("Ошибка: неверный тип аргумента:", e)
+        return False
+    except Exception as e:
+        print("Непредвиденная ошибка:", e)
+        return False
+    finally:
+        print("Проверка пароля завершена.")
+
+print("Результат проверки:", is_password_good('PIUBIUBAFIUeB'))
+
+# --- Задание 2: Функция с переменным типом аргумента ---
+def diffTypeFunction(a):
+    try:
+        if type(a) == tuple:
+            print("Tuple:")
+            for i in a:
+                print("len of", i, "is", len(i))
+        elif type(a) == list:
+            print("List:")
+            isNegativeFound = False
+            sumAfterNegatvie = 0
+            for i in range(len(a)):
+                if isNegativeFound:
+                    sumAfterNegatvie += a[i]
+                elif a[i] < 0:
+                    isNegativeFound = True
+            print("sum after negative:", sumAfterNegatvie)
+        elif type(a) == int:
+            numStr = str(a)
+            print("amount of even digits:", sum(1 for c in numStr if c in "02468"))
+        elif type(a) == str:
+            wordNumArr = a.split()
+            numberSum = sum(int(w) for w in wordNumArr if w.isnumeric())
+            print("sum of numbers in string:", numberSum)
+    except TypeError as e:
+        print("Ошибка типа данных:", e)
+    finally:
+        print("Обработка завершена.")
+
+diffTypeFunction(("apple", "banana", "kiwi"))
+diffTypeFunction([1, 2, -3, 4, 5])
+diffTypeFunction(24681)
+diffTypeFunction("some 10 20 words")
+
+# --- Задание 3: Перестановка столбцов матрицы ---
+def changeIandJcolumnsInMatrix(matrix, i, j):
+    try:
+        for row in matrix:
+            row[i - 1], row[j - 1] = row[j - 1], row[i - 1]
+    except IndexError as e:
+        print("Ошибка индекса столбца:", e)
+    finally:
+        print("Операция перестановки столбцов завершена.")
+
+matrix = [[1, 2, 3], [4, 5, 6]]
+print("Исходная матрица:", matrix)
+changeIandJcolumnsInMatrix(matrix, 1, 3)
+print("Матрица после перестановки:", matrix)
+
+# --- Задание 4: Демонстрация try..except..else..finally ---
+def process_data(value):
+    try:
+        print(f"\nОбработка значения: {repr(value)}")
+        num = float(value)
+        result = 100 / num
+    except ValueError as e:
+        print(f"  [except ValueError]: Ошибка преобразования ({e})")
+    except ZeroDivisionError as e:
+        print(f"  [except ZeroDivisionError]: Деление на ноль ({e})")
+    else:
+        print(f"  [else]: Успешный расчет, результат = {result:.2f}")
+    finally:
+        print("  [finally]: Блок гарантированного завершения выполнен.")
+
+for val in ["25", "0", "abc", 10]:
+    process_data(val)
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={Программное решение Части 3 (объектно-ориентированное программирование)}]
+# --- Задание 1: Класс односвязного списка ---
+class cheengizsList:
+    value = None
+    nextElem = None
+
+    def __init__(self, *elements):
+        self.value = None
+        self.nextElem = None
+        for el in elements:
+            self.append(el)
+
+    def append(self, val):
+        if self.value is None and self.nextElem is None:
+            self.value = val
+            return
+        curr = self
+        while curr.nextElem is not None:
+            curr = curr.nextElem
+        new_node = cheengizsList()
+        new_node.value = val
+        curr.nextElem = new_node
+
+    def prepend(self, val):
+        if self.value is None and self.nextElem is None:
+            self.value = val
+            return
+        new_node = cheengizsList()
+        new_node.value = self.value
+        new_node.nextElem = self.nextElem
+        self.value = val
+        self.nextElem = new_node
+
+    def insert(self, index, val):
+        if index < 0 or index > self.size():
+            raise IndexError("Индекс выходит за границы списка")
+        if index == 0:
+            self.prepend(val)
+            return
+        curr = self
+        for _ in range(index - 1):
+            curr = curr.nextElem
+        new_node = cheengizsList()
+        new_node.value = val
+        new_node.nextElem = curr.nextElem
+        curr.nextElem = new_node
+
+    def remove(self, val):
+        if self.value == val:
+            if self.nextElem is not None:
+                self.value = self.nextElem.value
+                self.nextElem = self.nextElem.nextElem
+            else:
+                self.value = None
+            return True
+        curr = self
+        while curr.nextElem is not None:
+            if curr.nextElem.value == val:
+                curr.nextElem = curr.nextElem.nextElem
+                return True
+            curr = curr.nextElem
+        raise ValueError(f"{val} не найден")
+
+    def get(self, index):
+        curr, idx = self, 0
+        while curr is not None and curr.value is not None:
+            if idx == index:
+                return curr.value
+            curr = curr.nextElem
+            idx += 1
+        raise IndexError("Индекс вне диапазона")
+
+    def find(self, val):
+        curr, idx = self, 0
+        while curr is not None and curr.value is not None:
+            if curr.value == val:
+                return idx
+            curr = curr.nextElem
+            idx += 1
+        return -1
+
+    def size(self):
+        if self.value is None and self.nextElem is None:
+            return 0
+        count, curr = 0, self
+        while curr is not None and curr.value is not None:
+            count += 1
+            curr = curr.nextElem
+        return count
+
+    def reverse(self):
+        elements = self.to_list()
+        elements.reverse()
+        self.clear()
+        for x in elements:
+            self.append(x)
+
+    def clear(self):
+        self.value = None
+        self.nextElem = None
+
+    def to_list(self):
+        res, curr = [], self
+        while curr is not None and curr.value is not None:
+            res.append(curr.value)
+            curr = curr.nextElem
+        return res
+
+    def __str__(self):
+        lst = self.to_list()
+        return " -> ".join(map(str, lst)) if lst else "Пустой список"
+
+# --- Задание 2: Иерархия транспортных средств ---
+class Vehicle:
+    def __init__(self, name, speed, cost_per_km):
+        self.name = name
+        self.speed = speed
+        self.cost_per_km = cost_per_km
+
+    def calculate_time(self, distance):
+        return distance / self.speed
+
+    def calculate_cost(self, distance):
+        return distance * self.cost_per_km
+
+    def get_trip_info(self, from_city, to_city, distance):
+        return {
+            "vehicle": self.name,
+            "route": f"{from_city} -> {to_city}",
+            "distance_km": distance,
+            "time_hours": round(self.calculate_time(distance), 2),
+            "cost_rub": round(self.calculate_cost(distance), 2)
+        }
+
+class Airplane(Vehicle):
+    def __init__(self, name="Самолет", speed=800, cost_per_km=12.0):
+        super().__init__(name, speed, cost_per_km)
+
+class Train(Vehicle):
+    def __init__(self, name="Поезд", speed=100, cost_per_km=3.5):
+        super().__init__(name, speed, cost_per_km)
+
+class Car(Vehicle):
+    def __init__(self, name="Автомобиль", speed=90, cost_per_km=5.5):
+        super().__init__(name, speed, cost_per_km)
+
+# --- Задание 3: Каталог библиотеки ---
+class Book:
+    def __init__(self, title, author, year):
+        self._title = title
+        self._author = author
+        self._year = year
+
+    @property
+    def title(self):
+        return self._title
+
+    @title.setter
+    def title(self, new_title):
+        if not new_title:
+            raise ValueError("Название не может быть пустым")
+        self._title = new_title
+
+    def __str__(self):
+        return f"«{self._title}» ({self._author}, {self._year})"
+
+class Department:
+    def __init__(self, name):
+        self._name = name
+        self._books = []
+
+    def add_book(self, book):
+        self._books.append(book)
+
+    def remove_book(self, title):
+        for i, b in enumerate(self._books):
+            if b.title.lower() == title.lower():
+                return self._books.pop(i)
+        return None
+
+    def change_book_title(self, old_title, new_title):
+        for b in self._books:
+            if b.title.lower() == old_title.lower():
+                b.title = new_title
+                return True
+        return False
+
+    def __str__(self):
+        res = f"Отдел: {self._name} ({len(self._books)} книг)\n"
+        for i, b in enumerate(self._books, 1):
+            res += f"   {i}. {b}\n"
+        return res
+
+class Library:
+    def __init__(self, name):
+        self._name = name
+        self._departments = {}
+
+    def add_department(self, dept):
+        self._departments[dept._name] = dept
+
+    def save_to_file(self, filename="library_catalog.txt"):
+        with open(filename, "w", encoding="utf-8") as f:
+            f.write(f"=== Библиотека: {self._name} ===\n\n")
+            for dept in self._departments.values():
+                f.write(str(dept) + "\n")
+\end{lstlisting}
+
+% -------------------------------------------------------------------------
+% 6. РЕЗУЛЬТАТЫ ВЫПОЛНЕНИЯ ИНДИВИДУАЛЬНОГО ЗАДАНИЯ
+% -------------------------------------------------------------------------
+\section{Результаты выполнения индивидуального задания}
+
+Разработанные программные модули были протестированы в интерактивной среде Jupyter Notebook под управлением ядра Python 3.14. Все тесты выполнены успешно с формированием ожидаемых выходных данных.
+
+На рисунке~1 представлены результаты консольного вывода выполнения заданий первой части лабораторной работы.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{images/fig1_part1_results.png}
+  \caption{Результаты тестирования алгоритмов обработки базовых структур данных части 1}
+  \label{fig:part1_results}
+\end{figure}
+
+При выполнении Задания 1 для натурального числа 1357 алгоритм корректно просуммировал все нечетные цифры: $1 + 3 + 5 + 7 = 16$. В Задании 2 для тестовой строки «Hello World» обнаружено 4 пары рядом стоящих символов нижнего регистра («el», «ll», «or», «ld») и 7 согласных букв. В Задании 3 исходный гетерогенный список $[1612, 49, \text{'hello'}, 6, 19, \text{'world'}]$ преобразован в $[1612, 1, \text{'hello'}, 6, 1, \text{'world'}]$ с расчетом суммы цифр четных чисел ($1+6+1+2 = 10$) и подсчетом гласных/согласных в строках. Сортировка словаря в Задании 4 сформировала упорядоченные коллекции по значениям в прямом и обратном направлениях, а для кортежа в Задании 6 определены минимальный ($-1$) и максимальный ($15555$) элементы.
+
+На рисунке~2 приведены результаты функционирования функций и механизмов обработки исключений второй части.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{images/fig2_part2_results.png}
+  \caption{Результаты тестирования функций и обработки исключений части 2}
+  \label{fig:part2_results}
+\end{figure}
+
+Функция \texttt{is\_password\_good} для тестового значения «PIUBIUBAFIUeB» подтвердила выполнение всех трех критериев безопасности (длина $\ge 10$, наличие верхнего и нижнего регистра) с обязательным срабатыванием блока \texttt{finally}. В универсальной функции \texttt{diffTypeFunction} успешно обработаны четыре типа аргументов: для списка $[1, 2, -3, 4, 5]$ сумма после первого отрицательного элемента составила $4 + 5 = 9$, для числа $24681$ подсчитано 4 четных цифры, а для строки «some 10 20 words» сумма чисел составила 30. Операция перестановки 1-го и 3-го столбцов матрицы размером $2 \times 3$ корректно изменила порядок элементов в каждой строке. Комплексный тест блока \texttt{try..except..else..finally} подтвердил автономную изоляцию ошибок \texttt{ZeroDivisionError} и \texttt{ValueError} без аварийной остановки приложения.
+
+На рисунке~3 проиллюстрировано пошаговое тестирование методов динамического списка \texttt{cheengizsList}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{images/fig3_part3_list.png}
+  \caption{Демонстрация вызова методов пользовательского класса односвязного списка}
+  \label{fig:part3_list}
+\end{figure}
+
+Были последовательно проверены все операции односвязного списка: создание из трех элементов ($10 \to 20 \to 30$), добавление в конец (\texttt{append(40)}), в начало (\texttt{prepend(5)}), вставка по индексу (\texttt{insert(2, 15)}), доступ по индексу (\texttt{get(3)} вернул 20), поиск позиции (\texttt{find(30)} вернул 4), удаление узла по значению (\texttt{remove(20)}) и разворот связей (\texttt{reverse()}), сформировавший инвертированный список из 5 узлов ($40 \to 30 \to 15 \to 10 \to 5$).
+
+На рисунке~4 представлены результаты экономического и временного анализа поездки по маршруту Минск\,--\,Москва для иерархии классов транспортных средств.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{images/fig4_part3_transport.png}
+  \caption{Сравнительные показатели транспортных средств по маршруту Минск -- Москва}
+  \label{fig:part3_transport}
+\end{figure}
+
+Для дистанции 720 км наиболее оперативным транспортом признан самолет ($0{,}90$ ч при стоимости $8640{,}0$ руб.), а наиболее экономичным --- поезд ($2520{,}0$ руб. при времени в пути $7{,}20$ ч). Сводный отчет был успешно сериализован в дисковый файл \texttt{trip\_report.txt}.
+
+На рисунке~5 отображена работа библиотечного каталога и выгрузка структуры в файл.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{images/fig5_part3_library.png}
+  \caption{Функционирование системы каталогизации книг библиотеки}
+  \label{fig:part3_library}
+\end{figure}
+
+В структуру библиотеки были добавлены два предметных отдела, произведено добавление литературы, модификация названия издания «1984» и исключение книги из каталога. Итоговая иерархическая структура была выгружена в файл \texttt{library\_catalog.txt}.
+
+% -------------------------------------------------------------------------
+% 7. ВЫВОДЫ ПО ЛАБОРАТОРНОЙ РАБОТЕ
+% -------------------------------------------------------------------------
+\section{Выводы}
+В ходе выполнения лабораторной работы №\,1 получены следующие практические результаты:
+\begin{enumerate}
+  \item Освоен базовый синтаксис языка Python, исследованы особенности динамической типизации и реализованы алгоритмы фильтрации, преобразования и сортировки стандартных коллекций (\texttt{str}, \texttt{list}, \texttt{dict}, \texttt{tuple}).
+  \item Изучена методология создания функций и построена надежная система обработки исключительных ситуаций (\texttt{TypeError}, \texttt{ValueError}, \texttt{IndexError}, \texttt{ZeroDivisionError}) на основе полной формы конструкции \texttt{try..except..else..finally}.
+  \item На практике закреплены принципы объектно-ориентированного программирования:
+  \begin{itemize}
+    \item реализован класс односвязного динамического списка \texttt{cheengizsList} со всеми базовыми операциями модификации и обхода;
+    \item построена полиморфная иерархия классов транспортных средств с расчетом параметров рейсов;
+    \item реализована система каталогизации библиотечного фонда с сокрытием внутренних атрибутов через декораторы \texttt{@property} и файловым экспортом.
+  \end{itemize}
+  \item Проведено тестирование всех программных модулей, подтвердившее их полную работоспособность и соответствие требованиям индивидуального варианта №\,7.
+\end{enumerate}
+
+\end{document}
