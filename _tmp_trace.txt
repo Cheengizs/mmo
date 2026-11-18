@@ -1,0 +1,107 @@
+--- 147-185 ---
+147: class SupermarketModel:
+148:     """Модель мини-супермаркета: календарь событий, отделы-ресурсы, покупатели-агенты.
+149: 
+150:     События: arr (приход), end (конец обслуживания → следующий отдел или уход),
+151:              fail / repair (отказ и восстановление продавца), close (закрытие потока).
+152:     Три независимых генератора случайных чисел (общие случайные числа для сравнения вариантов).
+153:     """
+154: 
+155:     def __init__(self, P: Params, seed: int, record: bool = False, trace: int = 0):
+156:         self.P, self.seed, self.record, self.trace_n = P, seed, record, trace
+157:         n = P.n_depts
+158:         self.rng_arr = np.random.default_rng([seed, 1])    # интервалы между приходами
+159:         self.rng_route = np.random.default_rng([seed, 2])  # p(k,i) и выбор отделов
+160:         self.rng_srv = np.random.default_rng([seed, 3])    # стандартные нормальные для времён обслуживания
+161:         self.depts = [Department(i, P.servers[i]) for i in range(n)]   # РЕСУРСЫ
+162:         self.customers: list[Customer] = []                            # АГЕНТЫ
+163:         self.heap, self._cnt = [], itertools.count()                   # календарь будущих событий
+164:         self.t_now = self.last_t = 0.0
+165:         self.area_sys = 0.0
+166:         self.n_sys = self.n_out = 0
+167:         self.n_visits_done = 0
+168:         self.wait_total = 0.0
+169:         self.max_q_total = 0
+170:         self.t_last_dep = 0.0
+171:         self.log = [] if trace else None
+172:         self.ser = {"t": [], "q": [], "b": [], "sys": [], "out": []} if record else None
+173: 
+174:     # ---------- служебное ----------
+175:     def push(self, t, kind, data=None):
+176:         heapq.heappush(self.heap, (t, next(self._cnt), kind, data))
+177: 
+178:     def _trace(self, t, ev, k, d=None, ql=None):
+179:         if self.log is not None and k < self.trace_n:
+180:             self.log.append((round(t, 3), ev, k + 1, None if d is None else d + 1, ql))
+181: 
+182:     def _advance(self, t):
+183:         """Сдвиг модельного времени: накопление площадей под Q_i(t), B_i(t), N(t)."""
+184:         dt = t - self.last_t
+185:         if dt > 0:
+--- 195-260 ---
+195:         D.busy += 1
+196:         D.visits += 1
+197:         w = t - c.q_enter
+198:         c.wait += w
+199:         self.wait_total += w
+200:         s = max(P.service_min, P.service_mean + P.service_sd * c.z[D.idx])
+201:         self.push(t + s, "end", (D.idx, c.id))
+202:         self._trace(t, "ServiceStart", c.id, D.idx, len(D.queue))
+203: 
+204:     def _try_start(self, D: Department, t):
+205:         while D.queue and D.busy < D.capacity:
+206:             self._start_service(D, D.queue.popleft(), t)
+207: 
+208:     def _enter_dept(self, c: Customer, t):
+209:         D = self.depts[c.dept]
+210:         c.q_enter = t
+211:         D.queue.append(c)
+212:         self._trace(t, "QueueJoin", c.id, D.idx, len(D.queue))
+213:         self._try_start(D, t)
+214:         D.max_q = max(D.max_q, len(D.queue))
+215: 
+216:     # ---------- генерация покупателя ----------
+217:     def _new_customer(self, t) -> Customer:
+218:         P = self.P; n = P.n_depts
+219:         p = 1.0 - self.rng_route.random(n)                       # p(k,i) ~ U(0;1]
+220:         while True:
+221:             sel = self.rng_route.random(n) < p
+222:             if sel.any() or not P.min_one_dept:
+223:                 break
+224:         route = [d for d in range(n - 1, -1, -1) if sel[d]]      # по убыванию номера отдела
+225:         c = Customer(len(self.customers), t, route, self.rng_srv.standard_normal(n))
+226:         self.customers.append(c)
+227:         return c
+228: 
+229:     # ---------- обработчики событий ----------
+230:     def _on_arrival(self, t):
+231:         P = self.P
+232:         if t > P.t_close:
+233:             return
+234:         c = self._new_customer(t)
+235:         self.n_sys += 1
+236:         self._trace(t, "Arrival", c.id)
+237:         if not c.route:                      # (возможно только при min_one_dept=False)
+238:             self._leave(c, t)
+239:         else:
+240:             self._enter_dept(c, t)
+241:         nxt = t + self.rng_arr.exponential(P.mean_interarrival)
+242:         if nxt <= P.t_close:
+243:             self.push(nxt, "arr")
+244: 
+245:     def _leave(self, c: Customer, t):
+246:         self.n_sys -= 1
+247:         self.n_out += 1
+248:         c.t_out = t
+249:         self.t_last_dep = max(self.t_last_dep, t)
+250:         self._trace(t, "Departure", c.id)
+251: 
+252:     def _on_service_end(self, t, d, k):
+253:         D, c = self.depts[d], self.customers[k]
+254:         D.busy -= 1
+255:         self.n_visits_done += 1
+256:         self._trace(t, "ServiceEnd", k, d, len(D.queue))
+257:         self._try_start(D, t)                # продавец берёт следующего из очереди
+258:         c.pos += 1
+259:         if c.pos < len(c.route):
+260:             self._enter_dept(c, t)           # переход в следующий выбранный отдел
